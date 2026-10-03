@@ -1,0 +1,11 @@
+lệnh chạy : 
+cd API
+uvicorn app:app --host 127.0.0.1 --port 8001
+Lyrics :
+cd Desktop
+python main.py
+cd C:\Users\ivy_m\Documents\ZingLyricsDesktop\API
+C:\Users\ivy_m\Documents\ZingLyricsDesktop\.venv\Scripts\python.exe -m uvicorn app:app --host 127.0.0.1 --port 8001
+cd "C:\Users\ivy_m\Documents\ZingLyricsDesktop"
+.\.venv\Scripts\python.exe Desktop\main.py
+Khôi Phục : Get-ChildItem "C:\Users\ivy_m\Documents\ZingLyricsDesktop\BAK" -Recurse | Select-Object FullName
