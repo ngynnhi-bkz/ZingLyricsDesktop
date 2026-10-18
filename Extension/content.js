@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
    ZingLyricsDesktop - ZingMP3 Content Script
    ========================================================== */
 
@@ -96,110 +96,29 @@ function getAudio() {
    ========================================================== */
 
 function getSongInfo(audio) {
+    const pageTitle = (document.title || "")
+        .split("|")[0]
+        .trim();
 
     let title = "";
-
     let artist = "";
 
-    let url = "";
+    // Ưu tiên tiêu đề trang đã xác nhận khớp player.
+    const separator = pageTitle.lastIndexOf(" - ");
 
-
-    const selectorsTitle = [
-
-        ".song-title",
-
-        ".player-title",
-
-        ".song-info .title",
-
-        '[class*="song-title"]',
-
-        '[class*="song-info"] .title'
-    ];
-
-
-    for (const selector of selectorsTitle) {
-
-        const element =
-            document.querySelector(selector);
-
-        if (
-            element &&
-            element.textContent.trim()
-        ) {
-
-            title =
-                element.textContent.trim();
-
-            break;
-        }
+    if (separator > 0) {
+        title = pageTitle.slice(0, separator).trim();
+        artist = pageTitle.slice(separator + 3).trim();
+    } else {
+        title = pageTitle;
     }
-
-
-    const selectorsArtist = [
-
-        ".song-artist",
-
-        ".player-artist",
-
-        ".song-info .artist",
-
-        '[class*="song-artist"]',
-
-        '[class*="song-info"] .artist'
-    ];
-
-
-    for (const selector of selectorsArtist) {
-
-        const element =
-            document.querySelector(selector);
-
-        if (
-            element &&
-            element.textContent.trim()
-        ) {
-
-            artist =
-                element.textContent.trim();
-
-            break;
-        }
-    }
-
-
-    if (!title) {
-
-        const titleElement =
-            document.querySelector("title");
-
-        if (titleElement) {
-
-            title =
-                titleElement.textContent
-                    .replace(
-                        /\s*\|\s*Zing MP3.*$/i,
-                        ""
-                    )
-                    .trim();
-        }
-    }
-
-
-    if (audio) {
-
-        url =
-            audio.src || "";
-    }
-
 
     return {
         title,
         artist,
-        url
+        url: audio ? (audio.currentSrc || audio.src || "") : ""
     };
 }
-
 
 /* ==========================================================
    PLAYER UPDATE
@@ -250,127 +169,64 @@ function sendPlayer(audio) {
    ========================================================== */
 
 function parseLyricsResponse(payload) {
-
     const sentences =
-
         payload &&
         payload.data &&
         Array.isArray(payload.data.sentences)
-
             ? payload.data.sentences
-
             : [];
-
 
     const result = [];
 
-
     for (const sentence of sentences) {
+        const words = Array.isArray(sentence.words)
+            ? sentence.words
+            : [];
 
-        const words =
+        if (!words.length) continue;
 
-            Array.isArray(sentence.words)
-                ? sentence.words
-                : [];
+        const validWords = words.filter(word =>
+            word && typeof word.data === "string"
+        );
 
+        if (!validWords.length) continue;
 
-        if (!words.length) {
-            continue;
-        }
+        const startTimes = validWords
+            .map(word => Number(word.startTime))
+            .filter(Number.isFinite);
 
+        const endTimes = validWords
+            .map(word => Number(word.endTime))
+            .filter(Number.isFinite);
 
-        const validWords =
+        if (!startTimes.length || !endTimes.length) continue;
 
-            words.filter(word => {
+        const startTime = Math.min(...startTimes);
+        const endTime = Math.max(...endTimes);
 
-                return (
-                    word &&
-                    typeof word.data === "string"
-                );
+        const text = validWords
+            .map(word => String(word.data).trim())
+            .filter(Boolean)
+            .join(" ")
+            .trim();
 
-            });
-
-
-        if (!validWords.length) {
-            continue;
-        }
-
-
-        const startTimes =
-
-            validWords
-                .map(word =>
-                    Number(word.startTime)
-                )
-                .filter(Number.isFinite);
-
-
-        const endTimes =
-
-            validWords
-                .map(word =>
-                    Number(word.endTime)
-                )
-                .filter(Number.isFinite);
-
-
-        if (
-            !startTimes.length ||
-            !endTimes.length
-        ) {
-            continue;
-        }
-
-
-        const startTime =
-            Math.min(...startTimes);
-
-
-        const endTime =
-            Math.max(...endTimes);
-
-
-        const text =
-
-            validWords
-                .map(word =>
-                    String(word.data).trim()
-                )
-                .filter(Boolean)
-                .join(" ")
-                .trim();
-
-
-        if (!text) {
-            continue;
-        }
-
-
-        if (
-            !Number.isFinite(startTime) ||
-            !Number.isFinite(endTime)
-        ) {
-            continue;
-        }
-
-
-        if (endTime < startTime) {
-            continue;
-        }
-
+        if (!text) continue;
+        if (!Number.isFinite(startTime) ||
+            !Number.isFinite(endTime)) continue;
+        if (endTime < startTime) continue;
 
         result.push({
-
             text: text,
-
             start_time: startTime,
-
             end_time: endTime,
-
             words: validWords
         });
     }
 
+    console.log(
+        "[ZingLyricsDesktop] Parsed lyrics sample:",
+        result.slice(0, 3).map(line => line.text)
+    );
 
     return result;
 }

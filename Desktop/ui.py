@@ -1,5 +1,7 @@
-﻿from PySide6.QtCore import Qt
+﻿
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
+
 from animated_lyric import AnimatedLyric
 from current_widget import CurrentWidget
 
@@ -15,18 +17,36 @@ class LyricsWindow(QWidget):
             | Qt.WindowTransparentForInput
         )
 
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(
+            Qt.WA_TranslucentBackground
+        )
+
         self.resize(580, 95)
         self.move(-50, 450)
 
-        # Chỉ 1 lớp, không animation
         self.content = QWidget(self)
         self.content.setGeometry(10, 5, 560, 85)
-        self.content.setAttribute(Qt.WA_TranslucentBackground)
+        self.content.setAttribute(
+            Qt.WA_TranslucentBackground
+        )
 
-        self.prev = AnimatedLyric(size=10, bold=False)
+        self.prev = AnimatedLyric(
+            size=10,
+            bold=False,
+            duration=420,
+            offset=4,
+            opacity=0.43,
+        )
+
         self.current = CurrentWidget()
-        self.next = AnimatedLyric(size=10, bold=False)
+
+        self.next = AnimatedLyric(
+            size=10,
+            bold=False,
+            duration=420,
+            offset=4,
+            opacity=0.43,
+        )
 
         self.prev.setParent(self.content)
         self.current.setParent(self.content)
@@ -40,19 +60,21 @@ class LyricsWindow(QWidget):
         self.dragPos = None
 
     def updateLyrics(self, data):
+        prev = data.get("prev", "") or ""
         current = data.get("current", "") or ""
+        next_line = data.get("next", "") or ""
 
         if not current:
             return
 
-        self.prev.setLyrics(data.get("prev", "") or "")
+        self.prev.setLyrics(prev)
         self.current.setLyrics(current)
-        self.next.setLyrics(data.get("next", "") or "")
+        self.next.setLyrics(next_line)
 
         self.currentData = {
-            "prev": data.get("prev", "") or "",
+            "prev": prev,
             "current": current,
-            "next": data.get("next", "") or ""
+            "next": next_line,
         }
 
     def showUpdating(self):
@@ -70,7 +92,7 @@ class LyricsWindow(QWidget):
         self.currentData = {
             "prev": "",
             "current": "⋆ ⋆ ⋆",
-            "next": ""
+            "next": "",
         }
 
     def mousePressEvent(self, event):
@@ -81,7 +103,10 @@ class LyricsWindow(QWidget):
             )
 
     def mouseMoveEvent(self, event):
-        if self.dragPos:
+        if (
+            self.dragPos is not None
+            and event.buttons() & Qt.LeftButton
+        ):
             self.move(
                 event.globalPosition().toPoint()
                 - self.dragPos

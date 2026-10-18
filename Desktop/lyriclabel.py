@@ -1,5 +1,5 @@
-﻿from PySide6.QtCore import Qt
-from PySide6.QtGui import QFontMetrics, QPainter
+﻿
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLabel
 
 
@@ -13,65 +13,20 @@ class LyricLabel(QLabel):
         self.text_value = ""
 
         self.setAlignment(Qt.AlignCenter)
-        self.setStyleSheet("background: transparent;")
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setStyleSheet(
+            "background: transparent; color: white;"
+        )
+        self.setAttribute(
+            Qt.WA_TranslucentBackground
+        )
+
+        font = self.font()
+        font.setFamily("Lexend")
+        font.setPointSize(self.size)
+        font.setBold(self.bold)
+        self.setFont(font)
 
     def fitText(self, text):
-
         self.text_value = text or ""
-
-        font = self.font()
-        font.setFamily("Lexend")
-        font.setPointSize(self.size)
-        font.setBold(self.bold)
-
-        self.setFont(font)
         self.setText(self.text_value)
-
         self.update()
-
-    def paintEvent(self, event):
-
-        painter = QPainter(self)
-
-        painter.setRenderHint(
-            QPainter.Antialiasing
-        )
-
-        painter.setRenderHint(
-            QPainter.TextAntialiasing
-        )
-
-        font = self.font()
-        font.setFamily("Lexend")
-        font.setPointSize(self.size)
-        font.setBold(self.bold)
-
-        painter.setFont(font)
-        painter.setPen(Qt.white)
-
-        metrics = QFontMetrics(font)
-
-        text = self.text_value or ""
-
-        width = metrics.horizontalAdvance(text)
-
-        x = max(
-            0,
-            int((self.width() - width) / 2)
-        )
-
-        y = int(
-            (
-                self.height()
-                + metrics.ascent()
-                - metrics.descent()
-            ) / 2
-        )
-
-        painter.drawText(
-            x,
-            y,
-            text
-        )
-
