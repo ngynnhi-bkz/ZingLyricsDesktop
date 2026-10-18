@@ -164,7 +164,7 @@ backup_*/
 # Local root-level copies / temporary files
 /content.js
 /main.py
-/ui.py
+# /ui.py
 *.bak2
 Desktop/ui_truncated_backup.py
 Extension/content.js.bak2
