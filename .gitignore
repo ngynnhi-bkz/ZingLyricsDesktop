@@ -168,3 +168,18 @@ backup_*/
 *.bak2
 Desktop/ui_truncated_backup.py
 Extension/content.js.bak2
+
+# ============================================================
+# ADDITIONAL LOCAL BACKUP FILES
+# ============================================================
+
+# Backup files with timestamps or suffixes
+*.bak*
+*.before_restore
+*_backup.py
+*_truncated_backup.py
+
+# Local backup folders
+BAK/
+bak/
+backup_*/
